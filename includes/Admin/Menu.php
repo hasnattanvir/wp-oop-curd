@@ -6,7 +6,10 @@ namespace Linuxbangla\Academy\Admin;
  */
 class Menu {
 
-    function __construct() {
+    public $addressbook;
+
+    function __construct($addressbook) {
+        $this->addressbook = $addressbook;
         add_action('admin_menu', [$this, 'admin_menu']);
     }
 
@@ -19,11 +22,11 @@ class Menu {
             __('Academy', 'linuxbangla-academy'),
             $capability,
             $parent_slug,
-            [$this, 'addressbook_page'],
+            [$this->addressbook,'plugin_page'],
             'dashicons-welcome-learn-more'
         );
 
-        add_submenu_page($parent_slug, __('Address Book', 'linuxbangla-academy'), __('Address Book', 'linuxbangla-academy'), $capability, $parent_slug, [$this, 'addressbook_page']);
+        add_submenu_page($parent_slug, __('Address Book', 'linuxbangla-academy'), __('Address Book', 'linuxbangla-academy'), $capability, $parent_slug, [$this->addressbook,'plugin_page']);
 
         add_submenu_page($parent_slug, __('Settings', 'linuxbangla-academy'), __('Settings', 'linuxbangla-academy'), $capability, 'linuxbangla-academy-settings', [$this, 'setting_page']);
     }
@@ -34,10 +37,10 @@ class Menu {
     * @return void
     */
 
-    public function addressbook_page() {
-        $addressbook = new Addressbook();
-        $addressbook->plugin_page();
-    }
+    // public function addressbook_page() {
+    //     $addressbook = new Addressbook();
+    //     $addressbook->plugin_page();
+    // }
 
     /**
     * Handles the settings page

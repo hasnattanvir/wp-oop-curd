@@ -13,8 +13,12 @@
 if (!defined('ABSPATH')) {
     exit;   
 }
+require_once __DIR__ . '/includes/functions.php';
+// Autoload other classes
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 
-require_once __DIR__ . '/vendor/autoload.php';
 
 final class LB_LINUXBANGLACADEMY {
 
@@ -67,11 +71,8 @@ final class LB_LINUXBANGLACADEMY {
      * @return void
      */
     public function activate() {
-        $installed = get_option('lb_linuxbanglaacademy_installed');
-        if (!$installed) {
-            update_option('lb_linuxbanglaacademy_installed', time());
-        }
-        update_option('lb_linuxbanglaacademy', LB_LINUXBANGLACADEMY_VERSION);
+        $installer = new Linuxbangla\Academy\Installer();
+        $installer->run();
     }
 }
 /**

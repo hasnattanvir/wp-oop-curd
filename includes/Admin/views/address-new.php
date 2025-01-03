@@ -3,6 +3,7 @@
         <?php _e( 'New Address Book', 'linuxbangla-academy' ); ?>
     </h1>
     
+    <?php var_dump($this->errors); ?>
 
     <form action="" method="post">
         <table class="form-table">
@@ -52,6 +53,6 @@
             </tbody>
         </table>
         <?php wp_nonce_field('new-address'); ?>
-        <?php submit_button(__('Add Address','linuxbangla-academy'),'parimary','submit_address'); ?>
+        <?php submit_button( __('Add Address','linuxbangla-academy'), 'primary','submit_address'); ?>
     </form>
 </div>
