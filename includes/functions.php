@@ -42,3 +42,40 @@ function lb_ac_insert_address( $args = [] ) {
 
     return $wpdb->insert_id;
 }
+
+
+
+function lb_get_addresses($args = []) {
+    global $wpdb;
+
+    $defaults = [
+        'number'  => 15,
+        'offset'  => 0,
+        'orderby' => 'id',
+        'order'   => 'ASC',
+    ];
+
+    $args = wp_parse_args($args, $defaults);
+
+    // Sanitize the order and orderby values
+    $orderby = sanitize_sql_orderby($args['orderby']);
+    $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
+
+    // Build the query
+    $sql = $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}ac_addresses
+        ORDER BY {$orderby} {$order}
+        LIMIT %d, %d",
+        $args['offset'],
+        $args['number']
+    );
+
+    return $wpdb->get_results($sql);
+}
+
+
+
+function lb_address_count(){
+    global $wpdb;
+    return (int) $wpdb->get_var("SELECT count(id) FROM {$wpdb->prefix}ac_addresses");
+}

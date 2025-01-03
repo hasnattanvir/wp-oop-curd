@@ -7,4 +7,13 @@
         <?php _e( 'Add New', 'linuxbangla-academy' ); ?>
 
     </a>
+
+
+    <form action="" mehtod="post">
+        <?php
+            $table = new Linuxbangla\Academy\Admin\Address_List();
+            $table->prepare_items();
+            $table->display();
+        ?>
+    </form>
 </div>
