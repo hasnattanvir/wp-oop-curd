@@ -8,6 +8,21 @@
 
     </a>
 
+    <?php 
+    if(isset($_GET['inserted'])){ ?>
+        <div class="notice notice-success">
+            <p><?php _e('Address has been added successfully!','linuxbangla-academy') ?></p>
+        </div>
+    <?php
+    } ?>
+
+    <?php 
+    if(isset($_GET['deleted']) && $_GET['deleted'] == 'true'){ ?>
+        <div class="notice notice-success">
+            <p><?php _e('Address has been Deleted successfully!','linuxbangla-academy') ?></p>
+        </div>
+    <?php
+    } ?>
 
     <form action="" mehtod="post">
         <?php

@@ -25,6 +25,8 @@ class Address_List extends \WP_List_Table {
         ];
     }
 
+
+
     protected function column_default($item, $column_name){
         switch ($column_name){
             case 'value':
@@ -46,9 +48,9 @@ class Address_List extends \WP_List_Table {
     
         // Delete action
         $actions['delete'] = sprintf(
-            '<a href="%s" onclick="return confirm(\'Are you sure?\');">%s</a>',
-            admin_url('admin.php?page=linuxbangla-academy&action=delete&id=' . $item->id),
-            __('Delete', 'linuxbangla-academy')
+            '<a href="%s" class="submitdelete" onclick="return confirm(\'Are you sure?\');"title="%s">%s</a>',
+            wp_nonce_url( admin_url( 'admin-post.php?action=lb-ac-delete-address&id=' . $item->id ), 'lb-ac-delete-address' ), 
+                $item->id, __( 'Delete', 'linuxbangla-academy' ), __( 'Delete', 'linuxbangla-academy' )
         );
     
         // Display the name with actions
@@ -69,38 +71,43 @@ class Address_List extends \WP_List_Table {
 
 
     public function prepare_items() {
+
         $columns = $this->get_columns();
         $hidden = [];
-        $per_page = 15;
-
-        // Sorting
         $sortable = $this->get_sortable_columns();
         $this->_column_headers = [$columns, $hidden, $sortable];
 
-        // Get data
+        $per_page = 15;
         $current_page = $this->get_pagenum();
         $offset = ($current_page - 1) * $per_page;
 
-        // Fetch addresses
+        // Get sorting parameters
+        $orderby = (!empty($_GET['orderby'])) ? sanitize_text_field($_GET['orderby']) : 'name';
+        $order = (!empty($_GET['order'])) ? sanitize_text_field($_GET['order']) : 'asc';
+
+        // Fetch data
         $args = [
             'number'  => $per_page,
             'offset'  => $offset,
+            'orderby' => $orderby,
+            'order'   => $order,
         ];
         $this->items = lb_get_addresses($args);
 
         // Set pagination args
-        $total_items = lb_get_total_addresses(); // A separate function to count total records
+        $total_items = lb_get_total_addresses();
         $this->set_pagination_args([
             'total_items' => $total_items,
             'per_page'    => $per_page,
         ]);
+
     }
 
     // Define sortable columns
     public function get_sortable_columns() {
         return [
             'name'      => ['name', true],
-            'created_at'=> ['created_at', false],
+            'created_at'=> ['created_at', true],
         ];
     }
 }
