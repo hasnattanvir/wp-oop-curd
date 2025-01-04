@@ -59,6 +59,9 @@ final class LB_LINUXBANGLACADEMY {
     }
 
     public function init_plugin() {
+
+        new Linuxbangla\Academy\Assets();
+
         if(is_admin()){
             new Linuxbangla\Academy\Admin();
         }else{

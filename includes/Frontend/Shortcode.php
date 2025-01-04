@@ -24,6 +24,9 @@ namespace Linuxbangla\Academy\Frontend;
      */
 
     public function render_shortcode($atts,$content=''){
-        return 'hellow form shortcode';
+        // when it's rander it's work, it only for shortcode page not full site
+        wp_enqueue_script('academy-script');
+        wp_enqueue_style('academy-style');
+        return '<div class="linuxbangla-academy">This is Linuxbangla Academy Shortcode</div>';
     }
  }
