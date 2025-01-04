@@ -24,7 +24,12 @@ class Assets{
             'academy-style' => [
                 'src'       => LB_LINUXBANGLACADEMY_ASSETS.'/css/frontend.css',
                 'version'   => filemtime(LB_LINUXBANGLACADEMY_PATH.'/assets/css/frontend.css'),
-            ]
+            ],
+
+            'academy-admin-style' => [
+                'src'       => LB_LINUXBANGLACADEMY_ASSETS.'/css/admin.css',
+                'version'   => filemtime(LB_LINUXBANGLACADEMY_PATH.'/assets/css/admin.css'),
+            ],
         ];
     }
 
@@ -39,7 +44,7 @@ class Assets{
         }
 
 
-
+        
         $styles = $this->get_styles();
 
         foreach($styles as $handle => $style){

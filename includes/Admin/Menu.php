@@ -17,7 +17,7 @@ class Menu {
         $parent_slug = 'linuxbangla-academy';
         $capability = 'manage_options';
 
-        add_menu_page(
+        $hook = add_menu_page(
             __('Linuxbangla Academy', 'linuxbangla-academy'),
             __('Academy', 'linuxbangla-academy'),
             $capability,
@@ -29,6 +29,9 @@ class Menu {
         add_submenu_page($parent_slug, __('Address Book', 'linuxbangla-academy'), __('Address Book', 'linuxbangla-academy'), $capability, $parent_slug, [$this->addressbook,'plugin_page']);
 
         add_submenu_page($parent_slug, __('Settings', 'linuxbangla-academy'), __('Settings', 'linuxbangla-academy'), $capability, 'linuxbangla-academy-settings', [$this, 'setting_page']);
+
+
+        add_action( 'admin_head-' . $hook, [$this, 'enqueue_assets']);
     }
 
     /**
@@ -51,5 +54,9 @@ class Menu {
         echo 'This is the Settings page.';
     }
 
+
+    public function enqueue_assets(){
+        wp_enqueue_style( 'academy-admin-style');
+    }
     
 }
