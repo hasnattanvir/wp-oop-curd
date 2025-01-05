@@ -67,6 +67,8 @@ final class LB_LINUXBANGLACADEMY {
         }else{
             new Linuxbangla\Academy\Frontend();
         }
+
+        new Linuxbangla\Academy\API();
     }
     /**
      * Do stuff upon plugin activation
