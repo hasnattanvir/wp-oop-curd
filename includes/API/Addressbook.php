@@ -58,6 +58,11 @@ class Addressbook extends WP_REST_Controller{
                     'permission_callback' => [ $this, 'update_item_permissions_check' ],
                     'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::EDITABLE ),
                 ],
+                [
+                    'methods'             => WP_REST_Server::DELETABLE,
+                    'callback'            => [ $this, 'delete_item' ],
+                    'permission_callback' => [ $this, 'delete_item_permissions_check' ],
+                ],
                 
                 'schema' => [$this, 'get_item_schema'],
             ]
@@ -241,20 +246,6 @@ class Addressbook extends WP_REST_Controller{
         return $params;
     }
 
-    // protected function get_contact( $id ) {
-    //     $contact = lb_ac_insert_address( $id );
-    //     // var_dump($contact);
-    //     if ( ! $contact ) {
-    //         return new WP_Error(
-    //             'rest_contact_invalid_id',
-    //             __( 'Invalid contact ID.' ),
-    //             [ 'status' => 404 ]
-    //         );
-    //     }
-
-    //     return $contact;
-    // }
-
     // Create Api methode
 
     public function create_item_permissions_check( $request ) {
@@ -272,13 +263,12 @@ class Addressbook extends WP_REST_Controller{
         // var_dump($contact_id);
         if ( is_wp_error( $contact_id ) ) {
             $contact_id->add_data( [ 'status' => 400 ] );
-
             return $contact_id;
         }
 
-        // $contact = $this->get_contact( $contact_id );
+        $contact = $this->get_contact( $contact_id );
         // var_dump($contactx);
-        $response = $this->prepare_item_for_response( $contact_id, $request );
+        $response = $this->prepare_item_for_response( $contact, $request );
 
         $response->set_status( 201 );
         $response->header( 'Location', rest_url( sprintf( '%s/%s/%d', $this->namespace, $this->rest_base, $contact_id ) ) );
@@ -308,17 +298,6 @@ class Addressbook extends WP_REST_Controller{
         return $prepared;
     }
 
-    // protected function prepare_item_for_database($request){
-    //     $prepared = [];
-    
-    //     $prepared['name'] = $request->get_param('name');
-    //     $prepared['address'] = $request->get_param('address');
-    //     $prepared['email'] = $request->get_param('email');
-    //     $prepared['phone'] = $request->get_param('phone');
-    
-    //     return $prepared;
-    // }
-
     //Get Single Item
 
     protected function get_contact( $id ) {
@@ -335,10 +314,6 @@ class Addressbook extends WP_REST_Controller{
     
         return $contact;
     }
-    
-    
-    
-
     
     public function get_item_permissions_check($request){
         if(!current_user_can( 'manage_options' )){
@@ -363,32 +338,60 @@ class Addressbook extends WP_REST_Controller{
         
     }
 
+    // Delete Item
+    public function delete_item_permissions_check($request){
+        return $this->get_item_permissions_check($request);
+    }
+
+    public function delete_item($request){
+        $contact = $this->get_contact( $request['id'] );
+        $previous = $this->prepare_item_for_response($contact, $request);
+
+        $deleted = lb_ac_delete_address($request['id']);
+        if ( ! $deleted ) {
+            return new \WP_Error(
+                'rest_contact_invalid_id',
+                __( 'Invalid contact ID.' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        $data = [
+            'deleted'  => true,
+            'previous' => $previous->get_data(),
+        ];
+
+        $response = rest_ensure_response( $data );
+
+        return $data;
+    }
+
     // Editable
-    // public function update_item_permissions_check($request){
-    //     return $this->get_items_permissions_check( $request );
-    // }
+    public function update_item_permissions_check($request){
+        return $this->get_items_permissions_check( $request );
+    }
     
-    // public function update_item(){
-    //     $contact = $this->get_contact($request['id']);
-    //     $prepared = $this->prepare_item_for_database($request);
+    public function update_item($request){
+        $contact = $this->get_contact($request['id']);
+        $prepared = $this->prepare_item_for_database($request);
 
-    //     $prepared = array_merge((array) $contact, $prepared );
-    //     $updated = lb_ac_insert_address($prepared);
+        $prepared = array_merge((array) $contact, $prepared );
+        $updated = lb_ac_insert_address($prepared);
 
-    //     if(!$updated){
-    //         return new WP_Error(
-    //             'rest_not_updated',
-    //             __('Sorry, the address could not be updated'),
-    //             ['status'=> 400]
-    //         );
-    //     }
+        if(!$updated){
+            return new WP_Error(
+                'rest_not_updated',
+                __('Sorry, the address could not be updated'),
+                ['status'=> 400]
+            );
+        }
 
 
-    //     $contact = $this->get_contact($request['id']);
-    //     $response = $this->prepare_item_for_response($contact, $request);
+        $contact = $this->get_contact($request['id']);
+        $response = $this->prepare_item_for_response($contact, $request);
 
-    //     return rest_ensure_response( $response );
-    // }
+        return rest_ensure_response( $response );
+    }
 
 
 
