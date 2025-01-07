@@ -6,11 +6,12 @@
  *
  * @return int|WP_Error
  */
+
 function lb_ac_insert_address( $args = [] ) {
     global $wpdb;
 
     if ( empty( $args['name'] ) ) {
-        return new \WP_Error( 'no-name', __( 'You Must Provide a Name.', 'linuxbangla-academy' ) );
+        return new \WP_Error( 'no-name', __( 'You must provide a name.', 'wedevs-academy' ) );
     }
 
     $defaults = [
@@ -24,25 +25,23 @@ function lb_ac_insert_address( $args = [] ) {
 
     $data = wp_parse_args( $args, $defaults );
     // edit update and new
-    if(isset($data['id'])){
+    if ( isset( $data['id'] ) ) {
+
         $id = $data['id'];
-        unset($data['id']);
+        unset( $data['id'] );
 
         $updated = $wpdb->update(
             $wpdb->prefix . 'ac_addresses',
             $data,
-            ['id'=>$id],
+            [ 'id' => $id ],
             [
-                '%s',
                 '%s',
                 '%s',
                 '%s',
                 '%d',
-                '%s',
+                '%s'
             ],
-            [
-                '%d'
-            ]
+            [ '%d' ]
         );
 
         return $updated;
@@ -141,6 +140,7 @@ function lb_ac_get_address($id){
     return $wpdb->get_row(
         $wpdb->prepare("SELECT * FROM {$wpdb->prefix}ac_addresses WHERE id = %d", $id)
     );
+    
 }
 
 function lb_ac_delete_address($id){

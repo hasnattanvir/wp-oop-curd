@@ -21,12 +21,50 @@ class Addressbook extends WP_REST_Controller{
                     'permission_callback'   => [ $this, 'get_items_permissions_check' ],
                     'args'                  => $this->get_collection_params()
                 ],
+                // create api
+                [
+                    'methods'             => WP_REST_Server::CREATABLE,
+                    'callback'            => [ $this, 'create_item' ],
+                    'permission_callback' => [ $this, 'create_item_permissions_check' ],
+                    'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+                ],
+
+                'schema' => [$this, 'get_item_schema'],
+            ]
+        );
+
+
+        register_rest_route( 
+            $this->namespace, 
+            '/' . $this->rest_base . '/(?P<id>[\d]+)',
+            [
+                'args' => [
+                    'id' => [
+                        'descripton'    =>__( 'Unique Identifier for the object' ),
+                        'type'          => 'integer',
+                    ]
+                ],
+                [
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => [$this, 'get_item'],
+                    'permission_callback' => [$this, 'get_item_permissions_check'],
+                    'args'                => [
+                        'context' => $this->get_context_param(['default' => 'view']),
+                    ]
+                ],
+                [
+                    'methods'       => WP_REST_Server::EDITABLE,
+                    'callback'            => [ $this, 'update_item' ],
+                    'permission_callback' => [ $this, 'update_item_permissions_check' ],
+                    'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::EDITABLE ),
+                ],
+                
                 'schema' => [$this, 'get_item_schema'],
             ]
         );
     }
 
-
+// Get Api Data
     public function get_items_permissions_check($request){
         if(current_user_can( 'manage_options' )){
             return true;
@@ -69,7 +107,6 @@ class Addressbook extends WP_REST_Controller{
         // return $contacts;
         return $response;
     }
-
 
     public function prepare_item_for_response($item, $request){
         $data = [];
@@ -117,7 +154,6 @@ class Addressbook extends WP_REST_Controller{
         return $response;
     }
 
-
     protected function prepare_links( $item ) {
         $base = sprintf( '%s/%s', $this->namespace, $this->rest_base );
         $links = [
@@ -131,7 +167,6 @@ class Addressbook extends WP_REST_Controller{
 
         return $links;
     }
-
 
     public function get_item_schema(){
         if($this->schema){
@@ -198,7 +233,6 @@ class Addressbook extends WP_REST_Controller{
         return $this->add_additional_fields_schema($this->schema);
     }
 
-
     public function get_collection_params(){
         $params = parent::get_collection_params();
 
@@ -206,4 +240,162 @@ class Addressbook extends WP_REST_Controller{
 
         return $params;
     }
+
+    // protected function get_contact( $id ) {
+    //     $contact = lb_ac_insert_address( $id );
+    //     // var_dump($contact);
+    //     if ( ! $contact ) {
+    //         return new WP_Error(
+    //             'rest_contact_invalid_id',
+    //             __( 'Invalid contact ID.' ),
+    //             [ 'status' => 404 ]
+    //         );
+    //     }
+
+    //     return $contact;
+    // }
+
+    // Create Api methode
+
+    public function create_item_permissions_check( $request ) {
+        return $this->get_items_permissions_check( $request );
+    }
+
+    public function create_item( $request ) {
+        $contact = $this->prepare_item_for_database( $request );
+
+        if ( is_wp_error( $contact ) ) {
+            return $contact;
+        }
+
+        $contact_id = lb_ac_insert_address( $contact );
+        // var_dump($contact_id);
+        if ( is_wp_error( $contact_id ) ) {
+            $contact_id->add_data( [ 'status' => 400 ] );
+
+            return $contact_id;
+        }
+
+        // $contact = $this->get_contact( $contact_id );
+        // var_dump($contactx);
+        $response = $this->prepare_item_for_response( $contact_id, $request );
+
+        $response->set_status( 201 );
+        $response->header( 'Location', rest_url( sprintf( '%s/%s/%d', $this->namespace, $this->rest_base, $contact_id ) ) );
+
+        return rest_ensure_response( $response );
+    }
+
+    protected function prepare_item_for_database( $request ) {
+        $prepared = [];
+
+        if ( isset( $request['name'] ) ) {
+            $prepared['name'] = $request['name'];
+        }
+
+        if ( isset( $request['address'] ) ) {
+            $prepared['address'] = $request['address'];
+        }
+
+        if ( isset( $request['email'] ) ) {
+            $prepared['email'] = $request['email'];
+        }
+
+        if ( isset( $request['phone'] ) ) {
+            $prepared['phone'] = $request['phone'];
+        }
+
+        return $prepared;
+    }
+
+    // protected function prepare_item_for_database($request){
+    //     $prepared = [];
+    
+    //     $prepared['name'] = $request->get_param('name');
+    //     $prepared['address'] = $request->get_param('address');
+    //     $prepared['email'] = $request->get_param('email');
+    //     $prepared['phone'] = $request->get_param('phone');
+    
+    //     return $prepared;
+    // }
+
+    //Get Single Item
+
+    protected function get_contact( $id ) {
+        $contact = lb_ac_get_address( $id );
+        // error_log('Contact Data for ID ' . $id . ': ' . print_r($contact, true)); // Debugging
+    
+        if ( ! $contact ) {
+            return new \WP_Error(
+                'rest_contact_invalid_id',
+                __( 'Invalid contact ID.' ),
+                [ 'status' => 404 ]
+            );
+        }
+    
+        return $contact;
+    }
+    
+    
+    
+
+    
+    public function get_item_permissions_check($request){
+        if(!current_user_can( 'manage_options' )){
+            return false;
+        }
+
+        $contact = $this->get_contact($request['id']);
+
+        if(is_wp_error( $contact )){
+            return $contact;
+        }
+
+        return true;
+    }
+
+    public function get_item($request){
+        $contact = $this->get_contact( $request['id'] );
+        $response = $this->prepare_item_for_response($contact, $request);
+        $response = rest_ensure_response( $response );
+
+        return $response;
+        
+    }
+
+    // Editable
+    // public function update_item_permissions_check($request){
+    //     return $this->get_items_permissions_check( $request );
+    // }
+    
+    // public function update_item(){
+    //     $contact = $this->get_contact($request['id']);
+    //     $prepared = $this->prepare_item_for_database($request);
+
+    //     $prepared = array_merge((array) $contact, $prepared );
+    //     $updated = lb_ac_insert_address($prepared);
+
+    //     if(!$updated){
+    //         return new WP_Error(
+    //             'rest_not_updated',
+    //             __('Sorry, the address could not be updated'),
+    //             ['status'=> 400]
+    //         );
+    //     }
+
+
+    //     $contact = $this->get_contact($request['id']);
+    //     $response = $this->prepare_item_for_response($contact, $request);
+
+    //     return rest_ensure_response( $response );
+    // }
+
+
+
+
+   
+
+    
+
+    
 }
